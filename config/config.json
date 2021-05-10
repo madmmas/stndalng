@@ -1,0 +1,20 @@
+{
+    "EncryptionKey": "F6F61L8L7CUCF61L8L7CUCGN0NKF61L8L7CUCGN0NKF61L8L7CUCGN0NK6336I8TFP9Y2ZOS43OS43",
+    "DB_USERNAME": "root",
+    "DB_PASSWORD": "root",
+    "DB_PORT": "3306",
+    "DB_HOST": "127.0.0.1",
+    "DB_NAME": "stndalng",
+    "PASS_POLICY": {
+        "pass_size": 6,
+        "pass_upper": false,
+        "pass_letter": true,
+        "pass_number": true,
+        "pass_history": 3,
+        "pass_special": false,
+        "if_pass_expire": true,
+        "lockout_duration": 1,
+        "days_tobe_expired": 45,
+        "lockout_threshold": 3
+    }
+}
