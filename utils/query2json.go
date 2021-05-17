@@ -6,17 +6,6 @@ import (
 	"fmt"
 )
 
-// func GetDefaultVal(key string, i interface{}) interface{} {
-// 	switch v := i.(type) {
-// 	case int:
-// 		return 0
-// 	case string:
-// 		return ""
-// 	default:
-// 		return ""
-// 	}
-// }
-
 // Function GetJSON returns query result in json object
 // based on params: (sqlString)
 func GetJSON(rows *sql.Rows) (string, error) {
@@ -50,9 +39,6 @@ func GetJSONTable(rows *sql.Rows) ([]byte, error) {
 // Function GetMapData returns query result in map formatted data
 // based on params: (sqlString)
 func GetMapData(rows *sql.Rows) ([]map[string]interface{}, error) {
-
-	// Execute the query
-	// rows, err := db.Query(sqlString)
 
 	columns, err := rows.Columns()
 	if err != nil {
