@@ -1,12 +1,29 @@
 # Auth on Rale and Password Policy Base
 
-## Password policy
+## Appling Roles
 
-## Role base Api Access
+## Appling Password policy
 
-## Configurations
+`config/config.json` file contains the password policy configuration as following:
 
-Configuration used gonfig. All configs are declared in `config/config.json`
+```json
+{
+    ...
+    "PASS_POLICY": {
+        "pass_size": 6,
+        "pass_upper": false,
+        "pass_letter": true,
+        "pass_number": true,
+        "pass_history": 3,
+        "pass_special": false,
+        "if_pass_expire": true,
+        "lockout_duration": 1,
+        "days_tobe_expired": 45,
+        "lockout_threshold": 3
+    }
+}
+
+```
 
 ## Architecture
 
@@ -22,3 +39,7 @@ Configuration used gonfig. All configs are declared in `config/config.json`
 ## Run
 
 `go run server.go`
+
+## Test
+
+`go test ./..`
