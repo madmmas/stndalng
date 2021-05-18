@@ -1,6 +1,30 @@
-# Auth Based On Role and Password Policy
+# Auth Based On Multiple Roles and Password Policy
 
 ## Appling Roles
+
+Roles can be applied on uri configured in the `config/handler_roles.json` file.
+
+```json
+{
+  "Login": [], // anonymous
+  "Logout": [], // anonymous
+  "NewRole": ["ROOT", "ADMIN"],
+  "UpdateRole": ["ROOT", "ADMIN"],
+  "GetRoles": ["ROOT", "ADMIN"],
+  "GetRole": ["*"], // authenticated users/owner
+  "GetRolesKV": ["*"],
+  "UserInfo": ["*"],
+  "GetUsers": ["ROOT", "ADMIN"],
+  "GetUser": ["*"],
+  "NewUser": ["ROOT", "ADMIN"],
+  "UpdateUser": ["ROOT", "ADMIN"],
+  "GetDeUsers": ["ROOT", "ADMIN"],
+  "DeleteUser": ["ROOT", "ADMIN"],
+  "ChangePassword": ["*"],
+  "ChangeUserDeactiveFlag": ["ROOT"],
+  "ChangeUserActiveFlag": ["ROOT"]
+}
+```
 
 ## Appling Password policy
 
