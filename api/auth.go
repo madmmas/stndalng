@@ -4,18 +4,25 @@ import (
 	"fmt"
 	"net/http"
 	"stndalng/config"
-	"stndalng/db"
 	"stndalng/model"
+	"stndalng/repo"
 	"strings"
 
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
+	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
-	"github.com/valyala/fastjson"
 
 	"golang.org/x/crypto/bcrypt"
+)
+
+type (
+	s_conf struct {
+		DB         *gorm.DB
+		PassPolicy *config.PassPolicy
+	}
 )
 
 // jwtCustomClaims are custom claims extending default ones.
@@ -49,86 +56,65 @@ func IsRoot(c echo.Context) bool {
 	return role == "ROOT"
 }
 
-func Login(c echo.Context) error {
+func (c *s_conf) getUserData(user *model.UserLogin, dt_user *model.User) (string, bool) {
 
-	user := new(model.UserLogin)
-	if err := c.Bind(user); err != nil {
-		fmt.Println("Error in there:")
-		return err
-	}
-	fmt.Println("ROLE::", user.Role)
-
-	// check if there are appcode
-	appcode := c.Param("appcode")
-	if appcode == "" {
-		return echo.ErrUnauthorized
-	}
-
-	// Throws unauthorized error
-	db := db.DbManager()
-	dt := model.User{}
+	db := c.DB
 	role := user.Role
-
 	if user.Role == "" {
 		// get user default role
 		fmt.Println("Role is empty.")
 		fmt.Println("USER::", user)
-		sql := "select * from _users where appcode=? and username=?"
-		if db.Raw(sql, appcode, user.Username).Scan(&dt).RecordNotFound() {
-			return echo.ErrUnauthorized
+		sql := "select * from _users where username=? and active=1"
+		if db.Raw(sql, user.Username).Scan(&dt_user).RecordNotFound() {
+			return "", false
 		}
-		role = dt.Default_role
+		role = dt_user.Default_role
 	} else {
-		sql := "select * from _users where appcode=? and username=? and find_in_set(?, roles)"
+		sql := "select * from _users where username=? and active=1 and find_in_set(?, roles)"
 		if user.Role == "ROOT" {
-			sql = "select * from _users where appcode=? and username=? and is_root=1 and 'ROOT'=?"
+			sql = "select * from _users where username=? and active=1 and is_root=1 and 'ROOT'=?"
 		}
-		if db.Raw(sql, appcode, user.Username, user.Role).Scan(&dt).RecordNotFound() {
-			return echo.ErrUnauthorized
+		if db.Raw(sql, user.Username, user.Role).Scan(&dt_user).RecordNotFound() {
+			return "", false
 		}
 	}
+	return role, true
+}
 
-	if !dt.Active {
-		return echo.ErrUnauthorized
-	}
-	fmt.Println(dt)
-
-	// Of_pass_policy := false
-	lockout_threshold := 0
-	lockout_duration := 0
-
-	configuration := config.GetConfig()
-	passwordPolicy := configuration.PASS_POLICY
-
-	lockout_threshold = fastjson.GetInt(passwordPolicy, "lockout_threshold")
-	lockout_duration = fastjson.GetInt(passwordPolicy, "lockout_duration")
-
-	is_lockout := (lockout_threshold > 0) && dt.IsLockout
-	failpass_count := dt.Failpasscount
+func (c *s_conf) isInThrottle(dt_user *model.User) (int, bool) {
+	passwordPolicy := c.PassPolicy
+	is_lockout := (passwordPolicy.LOCKOUT_THRESHOLD > 0) && dt_user.IsLockout
+	failpass_count := dt_user.Failpasscount
 	fmt.Println("failpass_count::", failpass_count)
 	if is_lockout {
 		// check if the threshold is over then reset
 		now := time.Now()
-		elapsed := now.Sub(dt.LockoutStart)
+		elapsed := now.Sub(dt_user.LockoutStart)
 		fmt.Println("Lockout Time elapsed::", elapsed.Minutes())
-		if elapsed.Minutes() <= float64(lockout_duration) {
+		if elapsed.Minutes() <= float64(passwordPolicy.LOCKOUT_DURATION) {
 			fmt.Println("Lock time is not over.")
-			return echo.ErrUnauthorized
+			return failpass_count, true
 		} else {
 			fmt.Println("Updated as lockout over.")
 			failpass_count = 0
 		}
 	}
 	fmt.Println("2: failpass_count::", failpass_count)
-	if !ValidateUsassword(dt.Password, user.Password) {
+	return failpass_count, false
+}
+
+func (c *s_conf) isPasswordValid(failpass_count int, user *model.UserLogin, dt_user *model.User) bool {
+	db := c.DB
+	passwordPolicy := c.PassPolicy
+	if !ValidateUsassword(dt_user.Password, user.Password) {
 		// if password does not match than update
-		if lockout_threshold > 0 {
-			fmt.Println(lockout_duration)
+		if passwordPolicy.LOCKOUT_THRESHOLD > 0 {
+			// fmt.Println(lockout_duration)
 			failpass_count = failpass_count + 1
 			fmt.Println("Fail pass:", failpass_count)
-			if failpass_count == lockout_threshold {
+			if failpass_count == passwordPolicy.LOCKOUT_THRESHOLD {
 				fmt.Println("Updated as lockout set to true.")
-				db.Model(&dt).Update(map[string]interface{}{
+				db.Model(&dt_user).Update(map[string]interface{}{
 					"Failpasscount": failpass_count,
 					"Lastfailpass":  time.Now(),
 					"IsLockout":     true,
@@ -136,7 +122,7 @@ func Login(c echo.Context) error {
 				})
 			} else {
 				fmt.Println("Updated as lockout set to false.")
-				db.Model(&dt).Update(map[string]interface{}{
+				db.Model(&dt_user).Update(map[string]interface{}{
 					"Failpasscount": failpass_count,
 					"Lastfailpass":  time.Now(),
 					"IsLockout":     false,
@@ -144,19 +130,44 @@ func Login(c echo.Context) error {
 				})
 			}
 		}
-		return echo.ErrUnauthorized
+		return false
 	} else {
 		fmt.Println("Updated as password matched.")
-		db.Model(&dt).Update(map[string]interface{}{
+		db.Model(&dt_user).Update(map[string]interface{}{
 			"Failpasscount": 0,
 			"IsLockout":     false,
 			"LockoutStart":  time.Time{},
 		})
 	}
+	return true
+}
 
+func (c *s_conf) isPasswordExpired(dt_user *model.User) bool {
+	passwordPolicy := c.PassPolicy
+	// if_pass_expire := fastjson.GetBool(passwordPolicy, "if_pass_expire")
+	if passwordPolicy.IF_PASS_EXPIRE {
+		// days_tobe_expired := fastjson.GetInt(passwordPolicy, "days_tobe_expired")
+		fmt.Println("days_tobe_expired::", passwordPolicy.DAYS_TOBE_EXPIRED)
+		fmt.Println("user updated::", dt_user.Updated)
+
+		now := time.Now()
+		elapsed := now.Sub(dt_user.Updated)
+		fmt.Println("Time elapsed::", elapsed.Hours()/24)
+		if int(elapsed.Hours()) >= (passwordPolicy.DAYS_TOBE_EXPIRED * 24) {
+			fmt.Println("Time Expired!!!")
+			return true
+
+		} else {
+			fmt.Println("Still have time.")
+		}
+	}
+	return false
+}
+
+func generateToken(key, role string, dt_user *model.User) (string, error) {
 	claims := &JwtCustomClaims{
-		dt.ID,
-		dt.Roles,
+		dt_user.ID,
+		dt_user.Roles,
 		role,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
@@ -167,36 +178,67 @@ func Login(c echo.Context) error {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate encoded token and send it as response.
-	t, err := token.SignedString([]byte("secret"))
-	if err != nil {
+	t, err := token.SignedString([]byte(key))
+	return t, err
+}
+
+func Login(c echo.Context) error {
+
+	user := new(model.UserLogin)
+	if err := c.Bind(user); err != nil {
+		fmt.Println("Error in there:")
 		return err
 	}
+	fmt.Println("ROLE::", user.Role)
+	conf := config.GetConfig()
 
-	if_pass_expire := fastjson.GetBool(passwordPolicy, "if_pass_expire")
-	if if_pass_expire {
-		days_tobe_expired := fastjson.GetInt(passwordPolicy, "days_tobe_expired")
-		fmt.Println("days_tobe_expired::", days_tobe_expired)
-		fmt.Println("user updated::", dt.Updated)
+	h_conf := s_conf{DB: repo.DbManager(), PassPolicy: &conf.PASS_POLICY}
 
-		now := time.Now()
-		elapsed := now.Sub(dt.Updated)
-		fmt.Println("Time elapsed::", elapsed.Hours()/24)
-		if int(elapsed.Hours()) >= (days_tobe_expired * 24) {
-			fmt.Println("Time Expired!!!")
-			return c.JSON(http.StatusForbidden, echo.Map{
-				"code":    20000,
-				"message": "Password expired. Please change your password.",
-				"data":    t,
-			})
-			// return echo.ErrForbidden
-		} else {
-			fmt.Println("Still have time.")
-		}
+	dt_user := model.User{}
+	// role := user.Role
+
+	// IP throtolling needs to be added here
+	// get client ip check if number of tries
+	// apply same logic here
+	// check the ip is in throtolling mode
+
+	// check if the user wants to login with specific role
+	role, usernotfound := h_conf.getUserData(user, &dt_user)
+	if !usernotfound {
+		return echo.ErrUnauthorized
+	}
+
+	fmt.Println(dt_user)
+
+	// check if the user is in lookout moode
+	failpass_count, inThrottle := h_conf.isInThrottle(&dt_user)
+	if inThrottle {
+		return echo.ErrTooManyRequests
+	}
+
+	// validate password
+	if !h_conf.isPasswordValid(failpass_count, user, &dt_user) {
+		return echo.ErrUnauthorized
+	}
+
+	// generate claim
+	token, err := generateToken(conf.EncryptionKey, role, &dt_user)
+	if err != nil {
+		return echo.ErrInternalServerError
+	}
+
+	// check password expired
+	if h_conf.isPasswordExpired(&dt_user) {
+		return c.JSON(http.StatusForbidden, echo.Map{
+			"code":    20000,
+			"message": "Password expired. Please change your password.",
+			"token":   token,
+		})
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
-		"code": 20000,
-		"data": t,
+		"code":  20000,
+		"token": token,
 	})
 }
 
@@ -215,7 +257,7 @@ func UserInfo(c echo.Context) error {
 	fmt.Println("UserID: ", userid)
 
 	// get the user info
-	db := db.DbManager()
+	db := repo.DbManager()
 	dt := new(model.User)
 	if db.Where("id = ?", userid).Find(&dt).RecordNotFound() {
 		return echo.NewHTTPError(http.StatusBadRequest, "Badrequest")

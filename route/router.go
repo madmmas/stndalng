@@ -2,6 +2,7 @@ package route
 
 import (
 	"stndalng/api"
+	"stndalng/repo"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -10,15 +11,18 @@ import (
 func Init() *echo.Echo {
 	e := echo.New()
 
+	repo.InitDB()
+
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	e.POST("/api/login", api.Login)
-	e.POST("/api/login", api.Login)
+	// public access
+	p := e.Group("/api")
 
-	e.GET("/api/roles", api.GetUserRoles)
-	e.POST("/api/user", api.CreateUser)
+	p.POST("/login", api.Login)
+	// p.POST("/logout", api.Logout)
 
+	// restricted access
 	r := e.Group("/api")
 
 	config := middleware.JWTConfig{

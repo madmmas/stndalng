@@ -6,12 +6,12 @@ Roles can be applied on uri configured in the `config/handler_roles.json` file.
 
 ```json
 {
-  "Login": [], // anonymous
-  "Logout": [], // anonymous
+  "Login": [],
+  "Logout": [],
   "NewRole": ["ROOT", "ADMIN"],
   "UpdateRole": ["ROOT", "ADMIN"],
   "GetRoles": ["ROOT", "ADMIN"],
-  "GetRole": ["*"], // authenticated users/owner
+  "GetRole": ["*"],
   "GetRolesKV": ["*"],
   "UserInfo": ["*"],
   "GetUsers": ["ROOT", "ADMIN"],

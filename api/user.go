@@ -4,58 +4,18 @@ import (
 	"fmt"
 	"net/http"
 	"stndalng/config"
-	"stndalng/db"
 	"stndalng/model"
+	"stndalng/repo"
 	"time"
 	"unicode"
 
 	"github.com/labstack/echo"
-	"github.com/valyala/fastjson"
 	"golang.org/x/crypto/bcrypt"
 	_ "golang.org/x/crypto/bcrypt"
 )
 
-func CreateUser(c echo.Context) error {
-
-	m := echo.Map{}
-	if err := c.Bind(&m); err != nil {
-		// return err
-	}
-	username := m["username"].(string)
-	email := m["email"].(string)
-	roles := m["roles"].(string)
-	password := m["password"].(string)
-	confirmPassword := m["confirm_password"].(string)
-
-	if password == "" || confirmPassword == "" || username == "" || email == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please enter username, email and password")
-	}
-
-	if password != confirmPassword {
-		return echo.NewHTTPError(http.StatusBadRequest, "Confirm password is not same to password provided")
-	}
-
-	// if model.ValidateEmail(email) == false {
-	// 	return echo.NewHTTPError(http.StatusBadRequest, "Please enter valid email")
-	// }
-
-	if bCheckUserExists(email) == true {
-		return echo.NewHTTPError(http.StatusBadRequest, "Email provided already exists")
-	}
-
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
-
-	dt := model.User{Username: username, Email: email, Password: string(hashedPassword), Roles: roles, Status: 1, Active: true}
-
-	db := db.DbManager()
-
-	db.Create(&dt)
-
-	return c.JSON(http.StatusCreated, dt)
-}
-
 func bCheckUserExists(email string) bool {
-	db := db.DbManager()
+	db := repo.DbManager()
 	dt := model.User{}
 	if db.Where(&model.User{Email: email}).First(&dt).RecordNotFound() {
 		return false
@@ -63,7 +23,7 @@ func bCheckUserExists(email string) bool {
 	return true
 }
 func bCheckUsernameExists(username string) bool {
-	db := db.DbManager()
+	db := repo.DbManager()
 	dt := model.User{}
 	if db.Where(&model.User{Username: username}).First(&dt).RecordNotFound() {
 		return false
@@ -77,7 +37,7 @@ func GetUsers(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	db := db.DbManager()
+	db := repo.DbManager()
 	Users := []model.User{}
 	db.Where("is_sys = 0").Where("active=1").Select("id, username, email, active, roles, is_root, updated").Find(&Users)
 	return c.JSON(http.StatusOK, Users)
@@ -89,7 +49,7 @@ func GetDeUsers(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	db := db.DbManager()
+	db := repo.DbManager()
 	Users := []model.User{}
 	db.Where("is_sys = 0").Where("active=0").Select("id, username, email, active, roles, is_root, updated").Find(&Users)
 	return c.JSON(http.StatusOK, Users)
@@ -100,7 +60,7 @@ func DeleteUser(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	db := db.DbManager()
+	db := repo.DbManager()
 	dt := model.User{}
 	id := c.Param("id")
 	fmt.Println(id)
@@ -118,7 +78,7 @@ func GetUser(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 
-	db := db.DbManager()
+	db := repo.DbManager()
 	dt := model.User{}
 	db.Where("id = ?", c.Param("id")).First(&dt)
 	return c.JSON(http.StatusOK, dt)
@@ -175,7 +135,7 @@ func NewUser(c echo.Context) error {
 	// need to make a generic password validator
 	dt_f := model.User{Username: username, Email: email, Password: string(hashedPassword), Roles: roles, Profile: profile, Default_role: defaultRole, Status: 1, Active: true}
 
-	db := db.DbManager()
+	db := repo.DbManager()
 
 	db.Create(&dt_f)
 
@@ -194,7 +154,7 @@ func UpdateUser(c echo.Context) error {
 		return err
 	}
 	fmt.Println(dt.ID)
-	db := db.DbManager()
+	db := repo.DbManager()
 
 	dt_f := model.User{}
 
@@ -255,7 +215,7 @@ func verifyPassword(s string) (letter, number, upper, special bool) {
 
 func VarifyPasswordPolicy(userid, password string) (bool, string, bool) {
 
-	db := db.DbManager()
+	db := repo.DbManager()
 	letter, number, upper, special := verifyPassword(password)
 	fmt.Println("Password::", letter, number, upper, special)
 
@@ -263,11 +223,11 @@ func VarifyPasswordPolicy(userid, password string) (bool, string, bool) {
 	configuration := config.GetConfig()
 	passwordPolicy := configuration.PASS_POLICY
 
-	pass_size := fastjson.GetInt(passwordPolicy, "pass_size")
-	pass_letter := fastjson.GetBool(passwordPolicy, "pass_letter")
-	pass_number := fastjson.GetBool(passwordPolicy, "pass_number")
-	pass_upper := fastjson.GetBool(passwordPolicy, "pass_upper")
-	pass_special := fastjson.GetBool(passwordPolicy, "pass_special")
+	pass_size := passwordPolicy.PASS_SIZE       // fastjson.GetInt(passwordPolicy, "pass_size")
+	pass_letter := passwordPolicy.PASS_LETTER   //fastjson.GetBool(passwordPolicy, "pass_letter")
+	pass_number := passwordPolicy.PASS_NUMBER   //fastjson.GetBool(passwordPolicy, "pass_number")
+	pass_upper := passwordPolicy.PASS_UPPER     //fastjson.GetBool(passwordPolicy, "pass_upper")
+	pass_special := passwordPolicy.PASS_SPECIAL //fastjson.GetBool(passwordPolicy, "pass_special")
 	fmt.Println("Password Policy::", pass_size, pass_letter, pass_number, pass_upper, pass_special)
 	if len(password) < pass_size || letter != pass_letter || number != pass_number || upper != pass_upper || special != pass_special {
 		return false, "Password policy does not match. Please provide a valid password.", false
@@ -275,7 +235,7 @@ func VarifyPasswordPolicy(userid, password string) (bool, string, bool) {
 
 	// check if password history is enabled
 
-	i_pass_history := fastjson.GetInt(passwordPolicy, "pass_history")
+	i_pass_history := passwordPolicy.PASS_HISTORY //fastjson.GetInt(passwordPolicy, "pass_history")
 	fmt.Println("PassHistory", i_pass_history)
 	if i_pass_history > 0 {
 		// get all the password
@@ -309,7 +269,7 @@ func ChangePassword(c echo.Context) error {
 	fmt.Println(dt.Password)
 	fmt.Println(dt.Repassword)
 
-	db := db.DbManager()
+	db := repo.DbManager()
 	tx := db.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -390,7 +350,7 @@ func ChangeUserDeactiveFlag(c echo.Context) error {
 	}
 
 	id := c.Param("id")
-	db := db.DbManager()
+	db := repo.DbManager()
 
 	dt_f := model.User{}
 
@@ -424,7 +384,7 @@ func ChangeUserActiveFlag(c echo.Context) error {
 	}
 
 	id := c.Param("id")
-	db := db.DbManager()
+	db := repo.DbManager()
 
 	dt_f := model.User{}
 
