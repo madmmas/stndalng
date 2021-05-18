@@ -53,7 +53,7 @@ Roles can be applied on uri configured in the `config/handler_roles.json` file.
 | --------- | ----------------------------------- |
 | api       | Holds the api endpoints             |
 | conf      | Holds the config files              |
-| db        | Database Initializer and DB manager |
+| repo      | Database Initializer and DB manager |
 | migration | Sql dump                            |
 | route     | router setup                        |
 | model     | Models                              |
@@ -64,5 +64,7 @@ Roles can be applied on uri configured in the `config/handler_roles.json` file.
 `go run server.go`
 
 ## Test
+
+TODO
 
 `go test ./..`
