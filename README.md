@@ -8,21 +8,19 @@
 
 ```json
 {
-    ...
-    "PASS_POLICY": {
-        "pass_size": 6,
-        "pass_upper": false,
-        "pass_letter": true,
-        "pass_number": true,
-        "pass_history": 3,
-        "pass_special": false,
-        "if_pass_expire": true,
-        "lockout_duration": 1,
-        "days_tobe_expired": 45,
-        "lockout_threshold": 3
-    }
+  "PASS_POLICY": {
+    "pass_size": 6,
+    "pass_upper": false,
+    "pass_letter": true,
+    "pass_number": true,
+    "pass_history": 3,
+    "pass_special": false,
+    "if_pass_expire": true,
+    "lockout_duration": 1,
+    "days_tobe_expired": 45,
+    "lockout_threshold": 3
+  }
 }
-
 ```
 
 ## Architecture
