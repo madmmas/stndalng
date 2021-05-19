@@ -164,13 +164,13 @@ func (c *s_conf) isPasswordExpired(dt_user *model.User) bool {
 	return false
 }
 
-func generateToken(key, role string, dt_user *model.User) (string, error) {
+func (c *s_conf) generateToken(role string, dt_user *model.User) (string, error) {
 	claims := &JwtCustomClaims{
 		dt_user.ID,
 		dt_user.Roles,
 		role,
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
+			ExpiresAt: time.Now().Add(time.Hour * time.Duration(c.PassPolicy.TOKEN_TOBE_EXPIRED)).Unix(),
 		},
 	}
 
@@ -178,7 +178,7 @@ func generateToken(key, role string, dt_user *model.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate encoded token and send it as response.
-	t, err := token.SignedString([]byte(key))
+	t, err := token.SignedString([]byte(c.PassPolicy.EncryptionKey))
 	return t, err
 }
 
@@ -190,9 +190,9 @@ func Login(c echo.Context) error {
 		return err
 	}
 	fmt.Println("ROLE::", user.Role)
-	conf := config.GetConfig()
+	passPolicy := config.GetPassPolicy()
 
-	h_conf := s_conf{DB: repo.DbManager(), PassPolicy: &conf.PASS_POLICY}
+	h_conf := s_conf{DB: repo.DbManager(), PassPolicy: &passPolicy}
 
 	dt_user := model.User{}
 	// role := user.Role
@@ -222,7 +222,7 @@ func Login(c echo.Context) error {
 	}
 
 	// generate claim
-	token, err := generateToken(conf.EncryptionKey, role, &dt_user)
+	token, err := h_conf.generateToken(role, &dt_user)
 	if err != nil {
 		return echo.ErrInternalServerError
 	}
