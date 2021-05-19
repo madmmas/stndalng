@@ -1,7 +1,9 @@
 package route
 
 import (
+	"net/http"
 	"stndalng/api"
+	"stndalng/config"
 	"stndalng/repo"
 
 	"github.com/labstack/echo"
@@ -27,9 +29,13 @@ func Init() *echo.Echo {
 
 	config := middleware.JWTConfig{
 		Claims:     &api.JwtCustomClaims{},
-		SigningKey: []byte("secret"),
+		SigningKey: []byte(config.GetPassPolicy().TOKEN_CRYPTO_KEY),
 	}
 	r.Use(middleware.JWTWithConfig(config))
+
+	r.GET("/test/restricted", func(ctx echo.Context) error {
+		return ctx.String(http.StatusOK, "hello, world!")
+	})
 
 	r.POST("/role", api.NewRole)
 	r.PUT("/role", api.UpdateRole)
