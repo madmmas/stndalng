@@ -13,7 +13,6 @@ type Configuration struct {
 }
 
 type PassPolicy struct {
-	EncryptionKey      string
 	PASS_SIZE          int
 	PASS_UPPER         bool
 	PASS_LETTER        bool
@@ -25,6 +24,7 @@ type PassPolicy struct {
 	DAYS_TOBE_EXPIRED  int
 	LOCKOUT_THRESHOLD  int
 	TOKEN_TOBE_EXPIRED int
+	TOKEN_CRYPTO_KEY   string
 }
 
 func GetConfig() Configuration {

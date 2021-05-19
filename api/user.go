@@ -220,8 +220,7 @@ func VarifyPasswordPolicy(userid, password string) (bool, string, bool) {
 	fmt.Println("Password::", letter, number, upper, special)
 
 	// get policy
-	configuration := config.GetConfig()
-	passwordPolicy := configuration.PASS_POLICY
+	passwordPolicy := config.GetPassPolicy()
 
 	pass_size := passwordPolicy.PASS_SIZE       // fastjson.GetInt(passwordPolicy, "pass_size")
 	pass_letter := passwordPolicy.PASS_LETTER   //fastjson.GetBool(passwordPolicy, "pass_letter")

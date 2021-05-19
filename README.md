@@ -32,7 +32,6 @@ Roles can be applied on uri configured in the `config/handler_roles.json` file.
 
 ```json
 {
-  "EncryptionKey": "F6F61L8L7CUCF61L8L7CUCGN0NKF61L8L7CUCGN0NKF61L8L7CUCGN0NK6336I8TFP9Y2ZOS43OS43",
   "PASS_SIZE": 6,
   "PASS_UPPER": false,
   "PASS_LETTER": true,
@@ -43,7 +42,8 @@ Roles can be applied on uri configured in the `config/handler_roles.json` file.
   "LOCKOUT_DURATION": 1,
   "DAYS_TOBE_EXPIRED": 45,
   "LOCKOUT_THRESHOLD": 3,
-  "TOKEN_TOBE_EXPIRED": 24
+  "TOKEN_TOBE_EXPIRED": 24,
+  "TOKEN_CRYPTO_KEY": "F6F61L8L7CUCF61L8L7CUCGN0NKF61L8L7CUCGN0NKF61L8L7CUCGN0NK6336I8TFP9Y2ZOS43OS43"
 }
 ```
 

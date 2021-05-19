@@ -178,7 +178,7 @@ func (c *s_conf) generateToken(role string, dt_user *model.User) (string, error)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate encoded token and send it as response.
-	t, err := token.SignedString([]byte(c.PassPolicy.EncryptionKey))
+	t, err := token.SignedString([]byte(c.PassPolicy.TOKEN_CRYPTO_KEY))
 	return t, err
 }
 
