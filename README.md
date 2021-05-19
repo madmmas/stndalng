@@ -62,9 +62,3 @@ Roles can be applied on uri configured in the `config/handler_roles.json` file.
 ## Run
 
 `go run server.go`
-
-## Test
-
-TODO
-
-`go test ./..`
