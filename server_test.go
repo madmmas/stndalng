@@ -9,11 +9,7 @@ import (
 	"gopkg.in/gavv/httpexpect.v2"
 )
 
-// Echo JWT token authentication tests.
-//
-// This test is executed for the EchoHandler() in two modes:
-//  - via http client
-//  - via http.Handler
+// JWT token authentication tests.
 func loginTestCase(e *httpexpect.Expect) {
 	type Login struct {
 		Username string `form:"username"`
