@@ -64,15 +64,15 @@ func (c *s_conf) getUserData(user *model.UserLogin, dt_user *model.User) (string
 		// get user default role
 		fmt.Println("Role is empty.")
 		fmt.Println("USER::", user)
-		sql := "select * from _users where username=? and active=1"
+		sql := "select * from users where username=? and active=1"
 		if db.Raw(sql, user.Username).Scan(&dt_user).RecordNotFound() {
 			return "", false
 		}
 		role = dt_user.Default_role
 	} else {
-		sql := "select * from _users where username=? and active=1 and find_in_set(?, roles)"
+		sql := "select * from users where username=? and active=1 and find_in_set(?, roles)"
 		if user.Role == "ROOT" {
-			sql = "select * from _users where username=? and active=1 and is_root=1 and 'ROOT'=?"
+			sql = "select * from users where username=? and active=1 and is_root=1 and 'ROOT'=?"
 		}
 		if db.Raw(sql, user.Username, user.Role).Scan(&dt_user).RecordNotFound() {
 			return "", false
