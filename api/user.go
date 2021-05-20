@@ -412,7 +412,11 @@ func ChangePassword(c echo.Context) error {
 				return err
 			}
 		}
-		if err := tx.Model(&dt_f).Update(model.User{Password: string(hashedPassword), Updated: time.Now()}).Error; err != nil {
+		if err := tx.Model(&dt_f).Update(map[string]interface{}{
+			"Password":         string(hashedPassword),
+			"Updated":          time.Now(),
+			"IsPassForceReset": false,
+		}).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
@@ -424,12 +428,12 @@ func ChangePassword(c echo.Context) error {
 			"message": "Password failed to changed.",
 		})
 
-	} else {
-		return c.JSON(http.StatusCreated, map[string]interface{}{
-			"code":    "20000",
-			"message": "Password changed.",
-		})
 	}
+
+	return c.JSON(http.StatusCreated, map[string]interface{}{
+		"code":    "20000",
+		"message": "Password changed.",
+	})
 }
 
 func ChangeUserDeactiveFlag(c echo.Context) error {
