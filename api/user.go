@@ -9,6 +9,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo"
 	"golang.org/x/crypto/bcrypt"
 	_ "golang.org/x/crypto/bcrypt"
@@ -254,6 +255,94 @@ func VarifyPasswordPolicy(userid, password string) (bool, string, bool) {
 	}
 	return true, "", i_pass_history > 0
 	// return true, "", false
+}
+
+func ResetPassword(c echo.Context) error {
+
+	if !IsRoot(c) {
+		return echo.ErrUnauthorized
+	}
+
+	userid, err := uuid.FromBytes([]byte(c.Param("id")))
+	if err == nil {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"code":    20000,
+			"message": "Invalid userid.",
+		})
+	}
+
+	dt := new(model.ChangePass)
+	if err := c.Bind(dt); err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"code":    20000,
+			"message": "Internal Error.",
+		})
+	}
+	fmt.Println(dt.Password)
+	fmt.Println(dt.Repassword)
+
+	db := repo.DbManager()
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	if err := tx.Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"code":    20000,
+			"message": "Transactional Error.",
+		})
+	}
+
+	dt_f := model.User{}
+
+	if tx.Where("id = ?", userid).First(&dt_f).RecordNotFound() {
+		// record not found
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"code":    20000,
+			"message": "User not found.",
+		})
+
+	} else {
+		// only update
+
+		password := dt.Password
+		confirmPassword := dt.Repassword
+
+		if password == "" || confirmPassword == "" {
+			return echo.NewHTTPError(http.StatusBadRequest, "Please enter password")
+		}
+
+		if password != confirmPassword {
+			return echo.NewHTTPError(http.StatusBadRequest, "Confirm password is not same to password provided")
+		}
+
+		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
+
+		// No need to check password policy
+		if err := tx.Model(&dt_f).Update(map[string]interface{}{
+			"Password":         string(hashedPassword),
+			"Updated":          time.Now(),
+			"IsPassForceReset": true,
+		}).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+	}
+	if err := tx.Commit().Error; err != nil {
+		return c.JSON(http.StatusCreated, map[string]interface{}{
+			"code":    "50000",
+			"message": "Password failed to changed.",
+		})
+
+	}
+
+	return c.JSON(http.StatusCreated, map[string]interface{}{
+		"code":    "20000",
+		"message": "Password changed.",
+	})
 }
 
 func ChangePassword(c echo.Context) error {

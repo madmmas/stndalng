@@ -51,6 +51,7 @@ func Init() *echo.Echo {
 	r.GET("/deusers", api.GetDeUsers)
 	r.DELETE("/user/:id", api.DeleteUser)
 	r.PUT("/change_password", api.ChangePassword)
+	r.PUT("/reset_password/:id", api.ResetPassword)
 	r.PUT("/deactive_user/:id", api.ChangeUserDeactiveFlag)
 	r.PUT("/active_user/:id", api.ChangeUserActiveFlag)
 
