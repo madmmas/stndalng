@@ -71,6 +71,7 @@ CREATE TABLE `users` (
   `updated` timestamp NULL DEFAULT NULL,
   `is_sys` tinyint(4) DEFAULT NULL,
   `is_lockout` tinyint(4) DEFAULT NULL,
+  `is_pass_force_reset` tinyint(1) DEFAULT NULL,
   `lockout_start` timestamp NULL DEFAULT NULL,
   `failpasscount` smallint(6) DEFAULT NULL,
   `lastfailpass` timestamp NULL DEFAULT NULL,
@@ -82,6 +83,6 @@ CREATE TABLE `users` (
 --
 
 LOCK TABLES `users` WRITE;
-INSERT INTO `users` VALUES ('5a1b489e-b978-11ea-b0ad-02bcbb6fc696','admin','admin@example.com','$2a$10$35lMU/xSah2EJrqn9iCEoeih7KRbZBubJUbKc73R.lwWx3g2Jxe4q',1,1,'ROOT,ADMIN,USER',NULL,1,'{\"avatar\": \"./images/robi_logo.png\", \"designation\": \"Administrator\", \"display_name\": \"Administrator\"}','2020-06-01 05:40:23','ADMIN','2021-04-24 02:15:01',0,0,NULL,0,'2021-04-24 03:44:26'),('9c186ba3-925d-11eb-b0ad-02bcbb6fc696','superadmin','root@example.com','$2a$10$TwmdbngtKJKSwWd1bBmTOutDxHFVNE.WtygdrAbx9BNYNQUygNUnO',1,1,'ROOT,ADMIN,USER',NULL,1,'{\"avatar\": \"./images/robi_logo.png\", \"designation\": \"Administrator\", \"display_name\": \"Administrator\"}','2020-06-01 05:40:23','ROOT','2022-12-30 14:43:54',1,0,NULL,0,NULL),('e1319bbc-1788-40f3-bafc-af59ed3cee70','user','user@example.com','$2a$10$NpKFsIMymKe/Dl/tWVhQoOsx5O6N9y8Vxl/I4v57UrVO1K3t/yamy',1,0,'USER','',0,'{\"avatar\": \"\", \"designation\": \"ADMIN\", \"display_name\": \"test@te.co\"}','2021-04-24 10:37:38','USER',NULL,0,0,NULL,0,NULL);
+INSERT INTO `users` VALUES ('5a1b489e-b978-11ea-b0ad-02bcbb6fc696','admin','admin@example.com','$2a$10$35lMU/xSah2EJrqn9iCEoeih7KRbZBubJUbKc73R.lwWx3g2Jxe4q',1,1,'ROOT,ADMIN,USER',NULL,1,'{\"avatar\": \"./images/robi_logo.png\", \"designation\": \"Administrator\", \"display_name\": \"Administrator\"}','2020-06-01 05:40:23','ADMIN','2021-04-24 02:15:01',0,0,0,NULL,0,'2021-04-24 03:44:26'),('9c186ba3-925d-11eb-b0ad-02bcbb6fc696','superadmin','root@example.com','$2a$10$TwmdbngtKJKSwWd1bBmTOutDxHFVNE.WtygdrAbx9BNYNQUygNUnO',1,1,'ROOT,ADMIN,USER',NULL,1,'{\"avatar\": \"./images/robi_logo.png\", \"designation\": \"Administrator\", \"display_name\": \"Administrator\"}','2020-06-01 05:40:23','ROOT','2022-12-30 14:43:54',1,0,0,NULL,0,NULL),('e1319bbc-1788-40f3-bafc-af59ed3cee70','user','user@example.com','$2a$10$NpKFsIMymKe/Dl/tWVhQoOsx5O6N9y8Vxl/I4v57UrVO1K3t/yamy',1,0,'USER','',0,'{\"avatar\": \"\", \"designation\": \"ADMIN\", \"display_name\": \"test@te.co\"}','2021-04-24 10:37:38','USER',NULL,0,0,0,NULL,0,NULL);
 UNLOCK TABLES;
 

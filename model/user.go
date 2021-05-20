@@ -42,10 +42,11 @@ type User struct {
 	IsRoot          bool       `json:"is_root,omitempty"`
 	Updated         time.Time  `json:"updated,omitempty"`
 
-	IsLockout     bool      `json:"-,omitempty"`
-	LockoutStart  time.Time `json:"-,omitempty"`
-	Failpasscount int       `json:"-,omitempty"`
-	Lastfailpass  time.Time `json:"-,omitempty"`
+	IsLockout        bool      `json:"-,omitempty"`
+	IsPassForceReset bool      `json:"-,omitempty"`
+	LockoutStart     time.Time `json:"-,omitempty"`
+	Failpasscount    int       `json:"-,omitempty"`
+	Lastfailpass     time.Time `json:"-,omitempty"`
 }
 
 func (User *User) BeforeCreate(scope *gorm.Scope) error {
