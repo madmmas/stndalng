@@ -230,15 +230,19 @@ func Login(c echo.Context) error {
 	// check password expired
 	if h_conf.isPasswordExpired(&dt_user) || dt_user.IsPassForceReset {
 		return c.JSON(http.StatusForbidden, echo.Map{
-			"code":    20000,
-			"message": "Password expired. Please reset your password.",
-			"token":   token,
+			"code":       20000,
+			"message":    "Password expired. Please reset your password.",
+			"auth_token": token,
 		})
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
-		"code":  20000,
-		"token": token,
+		"code":       20000,
+		"auth_token": token,
+		"user": echo.Map{
+			"email": dt_user.Email,
+			"role":  dt_user.Default_role,
+		},
 	})
 }
 
