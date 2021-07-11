@@ -5,7 +5,7 @@
     "PASS_NUMBER": true,
     "PASS_HISTORY": 3,
     "PASS_SPECIAL": false,
-    "IF_PASS_EXPIRE": true,
+    "IF_PASS_EXPIRE": false,
     "LOCKOUT_DURATION": 1,
     "DAYS_TOBE_EXPIRED": 45,
     "LOCKOUT_THRESHOLD": 3,

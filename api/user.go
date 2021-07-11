@@ -40,8 +40,11 @@ func GetUsers(c echo.Context) error {
 
 	db := repo.DbManager()
 	Users := []model.User{}
-	db.Where("is_sys = 0").Where("active=1").Select("id, username, email, active, roles, is_root, updated").Find(&Users)
-	return c.JSON(http.StatusOK, Users)
+	db.Where("is_sys = 0").Where("active=1").Select("id, username, email, active, default_role, roles, is_root, updated").Find(&Users)
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"data": Users,
+	})
 }
 
 func GetDeUsers(c echo.Context) error {

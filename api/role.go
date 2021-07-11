@@ -16,9 +16,11 @@ func GetRoles(c echo.Context) error {
 	}
 
 	db := repo.DbManager()
-	Role := []model.Role{}
-	db.Select("id, name, description").Find(&Role)
-	return c.JSON(http.StatusOK, Role)
+	Roles := []model.Role{}
+	db.Select("id, name, description").Find(&Roles)
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"data": Roles,
+	})
 }
 
 func GetRole(c echo.Context) error {

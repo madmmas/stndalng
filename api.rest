@@ -1,0 +1,20 @@
+### login
+POST http://localhost:4000/api/login HTTP/1.1
+content-type: application/json
+
+{
+    "username":"superadmin",
+    "password":"pass123"
+}
+
+### get roles
+GET http://localhost:4000/api/roles HTTP/1.1
+content-type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjljMTg2YmEzLTkyNWQtMTFlYi1iMGFkLTAyYmNiYjZmYzY5NiIsInJvbGVzIjoiUk9PVCxBRE1JTixVU0VSIiwicm9sZSI6IlJPT1QiLCJleHAiOjE2MjYwOTAyMjJ9.DpByT-Pz0SUUyuKrrdwYPPjfR8G5e0TMwI0wFYcgtJU
+
+
+### get users
+GET http://localhost:4000/api/users HTTP/1.1
+content-type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjljMTg2YmEzLTkyNWQtMTFlYi1iMGFkLTAyYmNiYjZmYzY5NiIsInJvbGVzIjoiUk9PVCxBRE1JTixVU0VSIiwicm9sZSI6IlJPT1QiLCJleHAiOjE2MjYwOTAyMjJ9.DpByT-Pz0SUUyuKrrdwYPPjfR8G5e0TMwI0wFYcgtJU
+
